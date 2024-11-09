@@ -5,10 +5,10 @@ from collections import defaultdict
 from scapy.layers.tls.record import TLS, TLSApplicationData
 from scapy.sessions import DefaultSession
 
-from meter.features.context.packet_direction import PacketDirection
-from meter.features.context.packet_flow_key import get_packet_flow_key
-from meter.flow import Flow
-from meter.time_series.processor import Processor
+from features.context.packet_direction import PacketDirection
+from features.context.packet_flow_key import get_packet_flow_key
+from flow import Flow
+from time_series.processor import Processor
 
 EXPIRED_UPDATE = 40
 
@@ -27,7 +27,8 @@ class FlowSession(DefaultSession):
         self.packets_count = 0
 
         self.clumped_flows_per_label = defaultdict(list)
-
+        prn = kwargs.pop('prn', None)
+        store = kwargs.pop('store', True)
         super(FlowSession, self).__init__(None, True, *args, **kwargs)
 
     def toPacketList(self):
@@ -119,7 +120,8 @@ class FlowSession(DefaultSession):
                     data = flow.get_data()
                     if self.csv_line == 0:
                         self.csv_writer.writerow(data.keys())
-                    self.csv_writer.writerow(data.values())
+                    if data['DoH']:
+                        self.csv_writer.writerow(data.values())
                     self.csv_line += 1
                     del self.flows[k]
             else:
